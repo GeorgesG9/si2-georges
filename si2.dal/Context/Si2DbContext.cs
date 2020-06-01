@@ -22,7 +22,9 @@ namespace si2.dal.Context
         public DbSet<Dataflow> Dataflows { get; set; }
         public DbSet<Vehicle> Vehicles { get; set; }
 
-        public Si2DbContext(DbContextOptions<Si2DbContext> options) : base(options)
+		public DbSet<Student> Students { get; set; }
+
+		public Si2DbContext(DbContextOptions<Si2DbContext> options) : base(options)
         {
             _httpContextAccessor = this.GetService<IHttpContextAccessor>();
 
@@ -37,11 +39,15 @@ namespace si2.dal.Context
         {
             base.OnModelCreating(builder);
 
-            // Customize the ASP.NET Identity model and override the defaults if needed.
-            // For example, you can rename the ASP.NET Identity table names and more.
-            // Add your customizations after calling base.OnModelCreating(builder);
-            // seed the database with dummy data
-        }
+			// Customize the ASP.NET Identity model and override the defaults if needed.
+			// For example, you can rename the ASP.NET Identity table names and more.
+			// Add your customizations after calling base.OnModelCreating(builder);
+			// seed the database with dummy data
+			builder.Entity<Student>()
+				.HasIndex(s => s.Code)
+				.IsUnique();
+
+		}
 
 		public override int SaveChanges()
 		{
@@ -62,18 +68,31 @@ namespace si2.dal.Context
 
 		public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
 		{
-			var audit = new Audit() { CreatedBy = _httpContextAccessor.HttpContext.User.Identity.Name };
-			audit.PreSaveChanges(this);
-			var rowAffecteds = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			audit.PostSaveChanges();
 
-			if (audit.Configuration.AutoSavePreAction != null)
+			try
 			{
-				audit.Configuration.AutoSavePreAction(this, audit);
-				await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-			}
+				var audit = new Audit() { CreatedBy = _httpContextAccessor.HttpContext.User.Identity.Name };
+				audit.PreSaveChanges(this);
 
-			return rowAffecteds;
+				var rowAffecteds = await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+				audit.PostSaveChanges();
+
+				if (audit.Configuration.AutoSavePreAction != null)
+				{
+					audit.Configuration.AutoSavePreAction(this, audit);
+					await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+				}
+
+				return rowAffecteds;
+			}
+			catch
+			{
+				return -1;
+				//throw new System.Exception("Save Error");
+			}
+			
+
 		}
 	}
 }

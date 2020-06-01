@@ -10,6 +10,7 @@ namespace si2.dal.UnitOfWork
     public interface IUnitOfWork
     {
         IDataflowRepository Dataflows { get; }
+        IStudentRepository Students { get; }
 
         Task<int> SaveChangesAsync(CancellationToken ct);
 

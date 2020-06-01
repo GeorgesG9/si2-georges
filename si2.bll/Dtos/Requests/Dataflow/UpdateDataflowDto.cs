@@ -13,7 +13,7 @@ namespace si2.bll.Dtos.Requests.Dataflow
         [Required]
         public string Tag { get; set; }
 
-        [Required]
+        //[Required]
         public byte[] RowVersion { get; set; }
     }
 }
